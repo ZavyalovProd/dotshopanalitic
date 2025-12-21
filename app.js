@@ -1,4 +1,4 @@
-var API_URL = 'http://147.45.229.179:5000/api';
+var API_URL = 'https://147.45.229.179/api';
 var ACCESS_TOKEN = 'jsdc&fg12@dot312shop*&^654analitics';
 
 var currentPeriod = 'week';
