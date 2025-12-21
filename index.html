@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOT SHOP · Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">DOT.</div>
+        <nav>
+            <a href="#" class="nav-item active" data-section="overview">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Overview</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="connection-status" id="connection-status">
+                <div class="status-dot offline"></div>
+                <span>Offline</span>
+            </div>
+            <a href="https://discord.gg/dotshop" target="_blank" class="discord-link">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <main class="main">
+        <header class="header">
+            <div class="header-left">
+                <h1>Analytics Dashboard</h1>
+                <p class="header-subtitle">Real-time statistics</p>
+            </div>
+            <div class="header-right">
+                <div class="last-update" id="last-update">Last update: --:--</div>
+                <div class="period-selector">
+                    <button class="period-btn" data-period="today">Today</button>
+                    <button class="period-btn active" data-period="week">Week</button>
+                    <button class="period-btn" data-period="month">Month</button>
+                    <button class="period-btn" data-period="year">Year</button>
+                    <button class="period-btn" data-period="all">All Time</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon orders-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Orders</span>
+                    <span class="stat-value" id="total-orders">-</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon reviews-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Reviews</span>
+                    <span class="stat-value" id="total-reviews">-</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon users-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Unique Buyers</span>
+                    <span class="stat-value" id="unique-buyers">-</span>
+                </div>
+            </div>
+
+            <div class="stat-card highlight">
+                <div class="stat-icon revenue-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Revenue</span>
+                    <span class="stat-value" id="total-revenue">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cards-row">
+            <div class="card revenue-card">
+                <h3>Revenue by Currency</h3>
+                <div class="currency-list">
+                    <div class="currency-item">
+                        <span class="currency-flag">🇪🇺</span>
+                        <span class="currency-name">EUR</span>
+                        <span class="currency-value" id="revenue-eur">€0.00</span>
+                    </div>
+                    <div class="currency-item">
+                        <span class="currency-flag">🇺🇸</span>
+                        <span class="currency-name">USD</span>
+                        <span class="currency-value" id="revenue-usd">$0.00</span>
+                    </div>
+                    <div class="currency-item">
+                        <span class="currency-flag">🇷🇺</span>
+                        <span class="currency-name">RUB</span>
+                        <span class="currency-value" id="revenue-rub">₽0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card payments-card">
+                <h3>Payment Methods</h3>
+                <div class="payment-methods" id="payment-methods">
+                    <div class="no-data">Waiting for data...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card orders-table-card">
+            <div class="card-header">
+                <h3>Recent Orders</h3>
+                <span class="badge" id="orders-count">0 orders</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Buyer</th>
+                            <th>Items</th>
+                            <th>Payment</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table">
+                        <tr>
+                            <td colspan="6" class="no-data">Waiting for data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
