@@ -1,50 +1,81 @@
 var API_URL = 'http://YOUR_SERVER_IP:5000/api';
+var ACCESS_TOKEN = 'jsdc&fg12@dot312shop*&^654analitics';
 
 var currentPeriod = 'week';
-var isConnected = false;
+var isAuthenticated = false;
 
-var EUR_TO_USD = 1.08;
+function checkAuth() {
+    var saved = localStorage.getItem('dotshop_token');
+    if (saved === ACCESS_TOKEN) {
+        showDashboard();
+    }
+}
+
+function login() {
+    var input = document.getElementById('token-input');
+    var error = document.getElementById('login-error');
+    var token = input.value.trim();
+    
+    if (token === ACCESS_TOKEN) {
+        localStorage.setItem('dotshop_token', token);
+        showDashboard();
+    } else {
+        error.textContent = 'Invalid token';
+        input.classList.add('error');
+        setTimeout(function() {
+            error.textContent = '';
+            input.classList.remove('error');
+        }, 3000);
+    }
+}
+
+function logout() {
+    localStorage.removeItem('dotshop_token');
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('dashboard').classList.remove('visible');
+    document.getElementById('token-input').value = '';
+    isAuthenticated = false;
+}
+
+function showDashboard() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('dashboard').classList.add('visible');
+    isAuthenticated = true;
+    fetchStats();
+}
 
 function setConnectionStatus(status) {
-    var statusEl = document.getElementById('connection-status');
-    var dot = statusEl.querySelector('.status-dot');
-    var text = statusEl.querySelector('span');
+    var el = document.getElementById('connection-status');
+    var dot = el.querySelector('.status-dot');
+    var text = el.querySelector('span');
     
     dot.className = 'status-dot ' + status;
-    
-    if (status === 'online') {
-        text.textContent = 'Connected';
-        isConnected = true;
-    } else if (status === 'connecting') {
-        text.textContent = 'Connecting...';
-    } else {
-        text.textContent = 'Offline';
-        isConnected = false;
-    }
+    text.textContent = status === 'online' ? 'Connected' : status === 'connecting' ? 'Connecting...' : 'Offline';
 }
 
 function updateLastUpdate() {
     var now = new Date();
     var time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    document.getElementById('last-update').textContent = 'Last update: ' + time;
+    document.getElementById('last-update').textContent = 'Updated: ' + time;
 }
 
 async function fetchStats() {
+    if (!isAuthenticated) return;
+    
     setConnectionStatus('connecting');
     
     try {
-        var response = await fetch(API_URL + '/stats?period=' + currentPeriod);
+        var response = await fetch(API_URL + '/stats?period=' + currentPeriod, {
+            headers: { 'Authorization': 'Bearer ' + ACCESS_TOKEN }
+        });
         
         if (!response.ok) throw new Error('API error');
         
         var data = await response.json();
-        
         setConnectionStatus('online');
         updateLastUpdate();
         renderStats(data);
-        
     } catch (error) {
-        console.error('Fetch error:', error);
         setConnectionStatus('offline');
     }
 }
@@ -75,19 +106,14 @@ function renderPaymentMethods(methods) {
         'Other': '#6b7280'
     };
     
-    var total = 0;
-    for (var m in methods) {
-        total += methods[m];
-    }
+    var total = Object.values(methods).reduce(function(a, b) { return a + b; }, 0);
     
     if (total === 0) {
-        container.innerHTML = '<div class="no-data">No payment data</div>';
+        container.innerHTML = '<div class="no-data">No data</div>';
         return;
     }
     
-    var sorted = Object.entries(methods).sort(function(a, b) { return b[1] - a[1]; });
-    
-    sorted.forEach(function(item) {
+    Object.entries(methods).sort(function(a, b) { return b[1] - a[1]; }).forEach(function(item) {
         var method = item[0];
         var count = item[1];
         var percent = (count / total) * 100;
@@ -97,9 +123,7 @@ function renderPaymentMethods(methods) {
         div.className = 'payment-method';
         div.innerHTML = 
             '<span class="payment-method-name">' + method + '</span>' +
-            '<div class="payment-method-bar">' +
-                '<div class="payment-method-fill" style="width: ' + percent + '%; background: ' + color + '"></div>' +
-            '</div>' +
+            '<div class="payment-method-bar"><div class="payment-method-fill" style="width:' + percent + '%;background:' + color + '"></div></div>' +
             '<span class="payment-method-count">' + count + '</span>';
         container.appendChild(div);
     });
@@ -107,55 +131,70 @@ function renderPaymentMethods(methods) {
 
 function renderOrdersTable(orders) {
     var tbody = document.getElementById('orders-table');
-    var countBadge = document.getElementById('orders-count');
+    var badge = document.getElementById('orders-count');
     
-    countBadge.textContent = orders.length + ' orders';
+    badge.textContent = orders.length + ' orders';
     
     if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="no-data">No orders found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="no-data">No orders</td></tr>';
         return;
     }
     
     tbody.innerHTML = '';
     
-    orders.slice(0, 20).forEach(function(order) {
+    orders.slice(0, 15).forEach(function(order) {
         var date = new Date(order.timestamp);
-        var dateStr = date.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        var dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
         
         var items = order.items || '-';
-        if (items.length > 30) items = items.substring(0, 30) + '...';
+        if (items.length > 25) items = items.substring(0, 25) + '...';
         
         var method = order.payment_method || 'Other';
-        var methodClass = method.toLowerCase();
         
         var tr = document.createElement('tr');
         tr.innerHTML = 
             '<td>#' + (order.ticket_number || '-') + '</td>' +
             '<td>' + (order.buyer_name || '-') + '</td>' +
-            '<td>' + items + '</td>' +
-            '<td><span class="payment-badge ' + methodClass + '">' + method + '</span></td>' +
+            '<td class="hide-mobile">' + items + '</td>' +
+            '<td><span class="payment-badge ' + method.toLowerCase() + '">' + method + '</span></td>' +
             '<td>€' + (order.total_cost || 0).toFixed(2) + '</td>' +
-            '<td>' + dateStr + '</td>';
+            '<td class="hide-mobile">' + dateStr + '</td>';
         tbody.appendChild(tr);
     });
 }
 
+document.getElementById('login-btn').addEventListener('click', login);
+document.getElementById('token-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') login();
+});
+document.getElementById('logout-btn').addEventListener('click', logout);
+
 document.querySelectorAll('.period-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.period-btn').forEach(function(b) { 
-            b.classList.remove('active'); 
-        });
+        document.querySelectorAll('.period-btn').forEach(function(b) { b.classList.remove('active'); });
         this.classList.add('active');
         currentPeriod = this.dataset.period;
         fetchStats();
     });
 });
 
-fetchStats();
+document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+    var sidebar = document.querySelector('.sidebar');
+    var overlay = document.querySelector('.overlay') || createOverlay();
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('visible');
+});
 
+function createOverlay() {
+    var overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.remove('open');
+        overlay.classList.remove('visible');
+    });
+    return overlay;
+}
+
+checkAuth();
 setInterval(fetchStats, 10000);
