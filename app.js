@@ -97,8 +97,9 @@ async function fetchStats(){
         setConn('on');
         document.getElementById('upd').textContent='Updated: '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
         updatePaymentFilter(data.payment_methods||{});
-        render()
-    }catch(e){console.error(e);setConn('')}
+        render();
+        return true
+    }catch(e){console.error(e);setConn('');return false}
 }
 
 async function fetchReviews(){
@@ -124,18 +125,15 @@ async function fetchMembers(){
 }
 
 function updatePaymentFilter(methods){
-    const sel=document.getElementById('filter-pay');
-    const cur=sel.value;
-    sel.innerHTML='<option value="all">All Methods</option>';
-    Object.keys(methods).sort().forEach(m=>{sel.innerHTML+=`<option value="${m.toLowerCase()}">${m}</option>`});
-    sel.value=cur
+    // Payment methods are now static in HTML
 }
 
 function getFilteredOrders(){
     return allOrders.filter(o=>{
         if(filterPay!=='all'){
             const pm=(o.payment_method||'').toLowerCase();
-            if(!pm.includes(filterPay))return false
+            // Direct match or contains
+            if(pm!==filterPay && !pm.includes(filterPay))return false
         }
         return true
     })
@@ -324,11 +322,16 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('tk-copy').onclick=copyToken;
     
     document.querySelectorAll('#periods button').forEach(b=>{
+        b.innerHTML=`<span>${b.textContent}</span>`;
         b.onclick=()=>{
             document.querySelectorAll('#periods button').forEach(x=>x.classList.remove('active'));
             b.classList.add('active');
             period=b.dataset.p;
-            fetchStats()
+            // Animate stats
+            document.querySelectorAll('.stat-v').forEach(s=>{s.style.opacity='0.5'});
+            fetchStats().then(()=>{
+                document.querySelectorAll('.stat-v').forEach(s=>{s.style.opacity='1'})
+            })
         }
     });
     
@@ -343,9 +346,11 @@ document.addEventListener('DOMContentLoaded',()=>{
             const s=n.dataset.s;
             if(s==='admin'&&!isAdmin)return;
             document.querySelectorAll('#nav .nav').forEach(x=>x.classList.remove('active'));
-            document.querySelectorAll('.sec').forEach(x=>x.classList.remove('active'));
+            document.querySelectorAll('.sec').forEach(x=>{x.classList.remove('active');x.classList.remove('fade-in')});
             n.classList.add('active');
-            document.getElementById('sec-'+s).classList.add('active');
+            const sec=document.getElementById('sec-'+s);
+            sec.classList.add('active');
+            setTimeout(()=>sec.classList.add('fade-in'),10);
             if(s==='admin'&&isAdmin){loadTokens();loadLogs()}
             if(s==='members')fetchMembers();
             document.getElementById('side').classList.remove('open');
