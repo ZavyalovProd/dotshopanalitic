@@ -8,201 +8,168 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loader-screen" id="loader-screen">
-        <div class="loader-content">
-            <div class="loader-animation">
-                <svg class="loader-svg" viewBox="0 0 100 100">
-                    <defs>
-                        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#ff9d5c"/>
-                            <stop offset="100%" style="stop-color:#ff7b3a"/>
-                        </linearGradient>
-                    </defs>
-                    <circle class="ring-bg" cx="50" cy="50" r="45"/>
-                    <circle class="ring-progress" cx="50" cy="50" r="45"/>
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="loader-inner">
+            <div class="loader-anim">
+                <svg viewBox="0 0 100 100">
+                    <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ff9d5c"/><stop offset="100%" stop-color="#ff7b3a"/></linearGradient></defs>
+                    <circle class="bg" cx="50" cy="50" r="45"/>
+                    <circle class="prog" cx="50" cy="50" r="45"/>
                 </svg>
-                <div class="loader-icon">
-                    <div class="icon-o"></div>
-                    <div class="icon-line"></div>
-                </div>
+                <div class="loader-logo"><div class="o"></div><div class="line"></div></div>
             </div>
-            <div class="loader-text">
-                <div class="loader-brand">DOT<span>.</span></div>
-                <p class="loader-status" id="loader-status">Initializing...</p>
-            </div>
+            <div class="loader-txt"><div class="brand">DOT<span>.</span></div><p id="loader-status">Initializing...</p></div>
         </div>
     </div>
 
-    <!-- Login Screen -->
-    <div class="login-screen" id="login-screen">
-        <div class="login-card">
-            <div class="login-logo">DOT<span>.</span></div>
-            <p class="login-subtitle">Analytics Dashboard</p>
+    <!-- Login -->
+    <div class="login" id="login">
+        <div class="login-box">
+            <div class="login-brand">DOT<span>.</span></div>
+            <p class="login-sub">Analytics Dashboard</p>
             
-            <div class="login-form" id="token-login-form">
-                <input type="password" id="token-input" class="login-input" placeholder="Enter access token">
-                <button id="login-btn" class="btn-primary">Access Dashboard</button>
-                <div class="divider"><span>or</span></div>
-                <button id="admin-login-btn" class="btn-secondary">Admin Login</button>
+            <div id="form-token" class="form">
+                <input type="password" id="inp-token" placeholder="Enter access token">
+                <button id="btn-login" class="btn orange">Access Dashboard</button>
+                <div class="or"><span>or</span></div>
+                <button id="btn-admin" class="btn outline">Admin Login</button>
             </div>
             
-            <div class="login-form hidden" id="admin-form">
+            <div id="form-pass" class="form hide">
                 <p class="form-title">🔐 Admin Access</p>
-                <input type="password" id="admin-password" class="login-input" placeholder="Enter admin password">
-                <button id="send-code-btn" class="btn-admin">Send Code to Email</button>
-                <button id="back-btn-1" class="btn-back">← Back</button>
+                <input type="password" id="inp-pass" placeholder="Admin password">
+                <button id="btn-send" class="btn red">Send Verification Code</button>
+                <button id="btn-back1" class="btn-link">← Back</button>
             </div>
             
-            <div class="login-form hidden" id="code-form">
-                <p class="form-title">📧 Verification Code</p>
-                <p class="form-hint">Check your email</p>
-                <input type="text" id="code-input" class="login-input code-input" placeholder="• • • • • •" maxlength="12">
-                <button id="verify-btn" class="btn-admin">Verify & Login</button>
-                <button id="back-btn-2" class="btn-back">← Back</button>
+            <div id="form-code" class="form hide">
+                <p class="form-title">📧 Check your email</p>
+                <input type="text" id="inp-code" class="code-inp" placeholder="• • • • • •" maxlength="12">
+                <button id="btn-verify" class="btn red">Verify & Login</button>
+                <button id="btn-back2" class="btn-link">← Back</button>
             </div>
             
-            <p class="login-error" id="login-error"></p>
+            <p class="error" id="error"></p>
         </div>
     </div>
 
     <!-- Dashboard -->
-    <div class="dashboard" id="dashboard">
-        <div class="sidebar" id="sidebar">
-            <div class="logo">DOT<span>.</span></div>
+    <div class="dash" id="dash">
+        <aside class="side" id="side">
+            <div class="side-logo">DOT<span>.</span></div>
             <nav id="nav">
-                <a href="#" class="nav-item active" data-section="overview">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                    <span>Overview</span>
-                </a>
-                <a href="#" class="nav-item" data-section="reviews">
-                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    <span>Reviews</span>
-                </a>
-                <a href="#" class="nav-item admin-nav hidden" data-section="admin">
-                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span>Admin</span>
-                </a>
+                <a href="#" class="nav active" data-s="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview</a>
+                <a href="#" class="nav" data-s="reviews"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Reviews</a>
+                <a href="#" class="nav admin-nav hide" data-s="admin"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admin Panel</a>
             </nav>
-            <div class="sidebar-footer">
-                <div class="status" id="status">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Offline</span>
-                </div>
-                <button class="logout-btn" id="logout-btn">
-                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                </button>
+            <div class="side-foot">
+                <div class="conn" id="conn"><span class="dot"></span><span class="txt">Offline</span></div>
+                <button class="logout" id="logout"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
             </div>
-        </div>
+        </aside>
 
         <div class="overlay" id="overlay"></div>
         <button class="menu-btn" id="menu-btn">☰</button>
 
         <main class="main" id="main">
             <!-- Overview -->
-            <section class="section active" id="section-overview">
-                <header class="header">
-                    <div>
-                        <h1>Analytics</h1>
-                        <p class="update-time" id="update-time">Last update: --:--</p>
-                    </div>
+            <section class="sec active" id="sec-overview">
+                <header class="head">
+                    <div><h1>Analytics</h1><p class="upd" id="upd">Updated: --:--</p></div>
                     <div class="periods" id="periods">
-                        <button data-period="today">Today</button>
-                        <button data-period="week" class="active">Week</button>
-                        <button data-period="month">Month</button>
-                        <button data-period="year">Year</button>
-                        <button data-period="all">All</button>
+                        <button data-p="today">Today</button>
+                        <button data-p="week" class="active">Week</button>
+                        <button data-p="month">Month</button>
+                        <button data-p="year">Year</button>
+                        <button data-p="all">All</button>
                     </div>
                 </header>
 
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter">
+                        <label>Payment Method</label>
+                        <select id="filter-pay">
+                            <option value="all">All Methods</option>
+                        </select>
+                    </div>
+                    <div class="filter">
+                        <label>Currency</label>
+                        <select id="filter-cur">
+                            <option value="all">All Currencies</option>
+                            <option value="eur">EUR €</option>
+                            <option value="usd">USD $</option>
+                            <option value="rub">RUB ₽</option>
+                        </select>
+                    </div>
+                    <button class="filter-reset" id="filter-reset">Reset</button>
+                </div>
+
                 <div class="stats">
-                    <div class="stat"><div class="stat-icon">📦</div><div><span class="stat-label">Orders</span><span class="stat-value" id="stat-orders">-</span></div></div>
-                    <div class="stat"><div class="stat-icon">⭐</div><div><span class="stat-label">Reviews</span><span class="stat-value" id="stat-reviews">-</span></div></div>
-                    <div class="stat"><div class="stat-icon">👥</div><div><span class="stat-label">Buyers</span><span class="stat-value" id="stat-buyers">-</span></div></div>
-                    <div class="stat highlight"><div class="stat-icon">💰</div><div><span class="stat-label">Revenue</span><span class="stat-value" id="stat-revenue">-</span></div></div>
+                    <div class="stat"><div class="stat-i">📦</div><div><span class="stat-l">Orders</span><span class="stat-v" id="s-orders">-</span></div></div>
+                    <div class="stat"><div class="stat-i">⭐</div><div><span class="stat-l">Reviews</span><span class="stat-v" id="s-reviews">-</span></div></div>
+                    <div class="stat"><div class="stat-i">👥</div><div><span class="stat-l">Buyers</span><span class="stat-v" id="s-buyers">-</span></div></div>
+                    <div class="stat hl"><div class="stat-i">💰</div><div><span class="stat-l">Revenue</span><span class="stat-v" id="s-revenue">-</span></div></div>
                 </div>
 
                 <div class="row">
                     <div class="card">
                         <h3>Revenue</h3>
-                        <div class="currencies">
-                            <div><span>🇪🇺 EUR</span><span id="cur-eur">€0</span></div>
-                            <div><span>🇺🇸 USD</span><span id="cur-usd">$0</span></div>
-                            <div><span>🇷🇺 RUB</span><span id="cur-rub">₽0</span></div>
+                        <div class="curs">
+                            <div><span>🇪🇺 EUR</span><span id="c-eur">€0</span></div>
+                            <div><span>🇺🇸 USD</span><span id="c-usd">$0</span></div>
+                            <div><span>🇷🇺 RUB</span><span id="c-rub">₽0</span></div>
                         </div>
                     </div>
-                    <div class="card tabs-card">
+                    <div class="card no-p">
                         <div class="tabs">
-                            <button class="active" data-tab="payments">Payments</button>
-                            <button data-tab="products">Products</button>
-                            <button data-tab="buyers">Buyers</button>
+                            <button class="active" data-t="payments">Payments</button>
+                            <button data-t="products">Products</button>
+                            <button data-t="buyers">Buyers</button>
                         </div>
-                        <div class="tab-content active" id="tab-payments"></div>
-                        <div class="tab-content" id="tab-products"></div>
-                        <div class="tab-content" id="tab-buyers"></div>
+                        <div class="tab active" id="t-payments"></div>
+                        <div class="tab" id="t-products"></div>
+                        <div class="tab" id="t-buyers"></div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-head"><h3>Orders</h3><span class="badge" id="orders-badge">0</span></div>
-                    <div class="table-wrap">
+                    <div class="card-h"><h3>Orders</h3><span class="badge" id="o-badge">0</span></div>
+                    <div class="tbl-wrap">
                         <table>
-                            <thead><tr><th>#</th><th>Buyer</th><th class="hide-m">Items</th><th>Pay</th><th>Total</th><th class="hide-m">Date</th><th></th></tr></thead>
-                            <tbody id="orders-tbody"></tbody>
+                            <thead><tr><th>#</th><th>Buyer</th><th class="hm">Items</th><th>Pay</th><th>Total</th><th class="hm">Date</th><th></th></tr></thead>
+                            <tbody id="o-body"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
             <!-- Reviews -->
-            <section class="section" id="section-reviews">
-                <header class="header"><h1>Reviews</h1></header>
-                
-                <div class="reviews-stats">
-                    <div class="stat"><div class="stat-icon">⭐</div><div><span class="stat-label">Total</span><span class="stat-value" id="reviews-total">-</span></div></div>
-                    <div class="stat"><div class="stat-icon">⭐⭐⭐⭐⭐</div><div><span class="stat-label">Rating</span><span class="stat-value">5.0</span></div></div>
+            <section class="sec" id="sec-reviews">
+                <header class="head"><h1>Reviews</h1></header>
+                <div class="r-stats">
+                    <div class="stat"><div class="stat-i">⭐</div><div><span class="stat-l">Total</span><span class="stat-v" id="r-total">-</span></div></div>
+                    <div class="stat"><div class="stat-i">📊</div><div><span class="stat-l">Avg Rating</span><span class="stat-v" id="r-avg">5.0</span></div></div>
                 </div>
-
-                <div class="reviews-list" id="reviews-list">
-                    <div class="loading">Loading reviews...</div>
-                </div>
-
-                <a href="https://discord.com/channels/1440679410616578152/1440808658903629935" target="_blank" class="discord-link">
-                    View all on Discord →
-                </a>
+                <div class="r-list" id="r-list"><div class="loading">Loading reviews...</div></div>
+                <a href="https://discord.com/channels/1440679410616578152/1440808658903629935" target="_blank" class="discord">View on Discord →</a>
             </section>
 
             <!-- Admin -->
-            <section class="section" id="section-admin">
-                <header class="header"><h1>🔴 Admin Panel</h1></header>
-                
-                <div class="admin-grid">
-                    <div class="admin-card">
+            <section class="sec" id="sec-admin">
+                <header class="head"><h1>🔴 Admin Panel</h1></header>
+                <div class="admin-g">
+                    <div class="admin-c">
                         <h3>🔑 Create Token</h3>
-                        <input type="text" id="token-name" placeholder="Token name">
-                        <input type="number" id="token-uses" placeholder="Max uses (-1 = ∞)" value="-1">
-                        <button id="create-token-btn">Create Token</button>
-                        <div class="token-created hidden" id="token-created">
-                            <p>✅ Token created! Copy now:</p>
-                            <code id="new-token"></code>
-                            <button id="copy-btn">Copy</button>
-                        </div>
+                        <input type="text" id="tk-name" placeholder="Token name">
+                        <input type="number" id="tk-uses" placeholder="Max uses (-1 = ∞)" value="-1">
+                        <button id="tk-create">Create Token</button>
+                        <div class="tk-done hide" id="tk-done"><p>✅ Copy now:</p><code id="tk-new"></code><button id="tk-copy">Copy</button></div>
                     </div>
-                    
-                    <div class="admin-card">
-                        <h3>📋 Tokens</h3>
-                        <div class="admin-list" id="tokens-list"></div>
-                    </div>
-                    
-                    <div class="admin-card wide">
-                        <h3>🔐 Login Logs</h3>
-                        <div class="admin-list" id="login-logs"></div>
-                    </div>
-                    
-                    <div class="admin-card wide">
-                        <h3>🤖 Bot Logs</h3>
-                        <div class="admin-list" id="bot-logs"></div>
-                    </div>
+                    <div class="admin-c"><h3>📋 Tokens</h3><div class="admin-list" id="tk-list"></div></div>
+                    <div class="admin-c wide"><h3>🔐 Login Logs</h3><div class="admin-list" id="log-login"></div></div>
+                    <div class="admin-c wide"><h3>🤖 Bot Logs</h3><div class="admin-list" id="log-bot"></div></div>
                 </div>
             </section>
         </main>
