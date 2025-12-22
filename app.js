@@ -8,13 +8,12 @@ function loader(){
     const int=setInterval(()=>{
         if(i<steps.length)el.textContent=steps[i++];
         else{clearInterval(int);setTimeout(()=>{document.getElementById('loader').classList.add('hide');checkAuth()},300)}
-    },400);
+    },400)
 }
 
 function checkAuth(){
     const saved=localStorage.getItem('dotshop_token');
-    if(saved){token=saved;verify()}
-    else showLogin()
+    if(saved){token=saved;verify()}else showLogin()
 }
 
 function showLogin(){document.getElementById('login').classList.add('show')}
@@ -34,18 +33,13 @@ async function login(){
     try{
         const r=await fetch(API+'/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t})});
         const d=await r.json();
-        if(d.success){
-            token=t;isAdmin=d.is_admin===true;
-            localStorage.setItem('dotshop_token',t);
-            document.getElementById('login').classList.remove('show');
-            showDash()
-        }else err(d.error||'Invalid token')
+        if(d.success){token=t;isAdmin=d.is_admin===true;localStorage.setItem('dotshop_token',t);document.getElementById('login').classList.remove('show');showDash()}
+        else err(d.error||'Invalid token')
     }catch{err('Connection error')}
 }
 
 function logout(){
-    localStorage.removeItem('dotshop_token');
-    token=null;isAdmin=false;
+    localStorage.removeItem('dotshop_token');token=null;isAdmin=false;
     document.getElementById('dash').classList.remove('show','admin');
     document.querySelectorAll('.admin-nav').forEach(e=>e.classList.add('hide'));
     showLogin()
@@ -54,32 +48,15 @@ function logout(){
 function showDash(){
     const dash=document.getElementById('dash');
     dash.classList.add('show');
-    if(isAdmin===true){
-        dash.classList.add('admin');
-        document.querySelectorAll('.admin-nav').forEach(e=>e.classList.remove('hide'))
-    }else{
-        dash.classList.remove('admin');
-        document.querySelectorAll('.admin-nav').forEach(e=>e.classList.add('hide'))
-    }
+    if(isAdmin===true){dash.classList.add('admin');document.querySelectorAll('.admin-nav').forEach(e=>e.classList.remove('hide'))}
+    else{dash.classList.remove('admin');document.querySelectorAll('.admin-nav').forEach(e=>e.classList.add('hide'))}
     fetchStats();fetchReviews();fetchMembers()
 }
 
-function err(msg){
-    const e=document.getElementById('error');
-    e.textContent=msg;
-    setTimeout(()=>e.textContent='',3000)
-}
+function err(msg){const e=document.getElementById('error');e.textContent=msg;setTimeout(()=>e.textContent='',3000)}
 
-function showAdminForm(){
-    document.getElementById('form-token').classList.add('hide');
-    document.getElementById('form-pass').classList.remove('hide')
-}
-
-function backToToken(){
-    document.getElementById('form-pass').classList.add('hide');
-    document.getElementById('form-code').classList.add('hide');
-    document.getElementById('form-token').classList.remove('hide')
-}
+function showAdminForm(){document.getElementById('form-token').classList.add('hide');document.getElementById('form-pass').classList.remove('hide')}
+function backToToken(){document.getElementById('form-pass').classList.add('hide');document.getElementById('form-code').classList.add('hide');document.getElementById('form-token').classList.remove('hide')}
 
 async function sendCode(){
     const pw=document.getElementById('inp-pass').value.trim();
@@ -87,10 +64,8 @@ async function sendCode(){
     try{
         const r=await fetch(API+'/admin/request-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
         const d=await r.json();
-        if(d.success){
-            document.getElementById('form-pass').classList.add('hide');
-            document.getElementById('form-code').classList.remove('hide')
-        }else err(d.error||'Error')
+        if(d.success){document.getElementById('form-pass').classList.add('hide');document.getElementById('form-code').classList.remove('hide')}
+        else err(d.error||'Error')
     }catch{err('Connection error')}
 }
 
@@ -100,12 +75,8 @@ async function verifyCode(){
     try{
         const r=await fetch(API+'/admin/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
         const d=await r.json();
-        if(d.success){
-            token=d.admin_token;isAdmin=true;
-            localStorage.setItem('dotshop_token',token);
-            document.getElementById('login').classList.remove('show');
-            showDash()
-        }else err(d.error||'Invalid code')
+        if(d.success){token=d.admin_token;isAdmin=true;localStorage.setItem('dotshop_token',token);document.getElementById('login').classList.remove('show');showDash()}
+        else err(d.error||'Invalid code')
     }catch{err('Connection error')}
 }
 
@@ -127,7 +98,7 @@ async function fetchStats(){
         document.getElementById('upd').textContent='Updated: '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
         updatePaymentFilter(data.payment_methods||{});
         render()
-    }catch{setConn('')}
+    }catch(e){console.error(e);setConn('')}
 }
 
 async function fetchReviews(){
@@ -135,9 +106,11 @@ async function fetchReviews(){
     try{
         const r=await fetch(API+'/reviews',{headers:{'Authorization':'Bearer '+token}});
         const d=await r.json();
-        if(d.reviewer_ids)reviewerIds=new Set(d.reviewer_ids);
+        if(d.reviewer_ids){
+            reviewerIds=new Set(d.reviewer_ids.map(id=>String(id)));
+        }
         renderReviews(d);
-        render() // Re-render to update reviewer badges
+        if(data)render()
     }catch{}
 }
 
@@ -154,7 +127,7 @@ function updatePaymentFilter(methods){
     const sel=document.getElementById('filter-pay');
     const cur=sel.value;
     sel.innerHTML='<option value="all">All Methods</option>';
-    Object.keys(methods).sort().forEach(m=>{sel.innerHTML+=`<option value="${m}">${m}</option>`});
+    Object.keys(methods).sort().forEach(m=>{sel.innerHTML+=`<option value="${m.toLowerCase()}">${m}</option>`});
     sel.value=cur
 }
 
@@ -162,7 +135,7 @@ function getFilteredOrders(){
     return allOrders.filter(o=>{
         if(filterPay!=='all'){
             const pm=(o.payment_method||'').toLowerCase();
-            if(pm!==filterPay.toLowerCase())return false
+            if(!pm.includes(filterPay))return false
         }
         return true
     })
@@ -172,7 +145,6 @@ function render(){
     if(!data)return;
     const filtered=getFilteredOrders();
     let filteredRevenue=filtered.reduce((sum,o)=>sum+(o.total_cost||0),0);
-    
     document.getElementById('s-orders').textContent=filtered.length;
     document.getElementById('s-reviews').textContent=data.total_reviews||0;
     document.getElementById('s-buyers').textContent=data.unique_buyers||0;
@@ -180,7 +152,6 @@ function render(){
     document.getElementById('c-eur').textContent='€'+(data.revenue_eur||0).toFixed(2);
     document.getElementById('c-usd').textContent='$'+(data.revenue_usd||0).toFixed(2);
     document.getElementById('c-rub').textContent='₽'+Math.round(data.revenue_rub||0).toLocaleString();
-    
     renderPayments(data.payment_methods||{});
     renderProducts(data.top_products||[]);
     renderBuyers(data.top_buyers||[]);
@@ -191,9 +162,9 @@ function renderPayments(m){
     const c=document.getElementById('t-payments');
     const total=Object.values(m).reduce((a,b)=>a+b,0);
     if(!total){c.innerHTML='<div class="no-data">No data</div>';return}
-    const colors={Crypto:'#fbbf24',Card:'#818cf8',PayPal:'#3b82f6',SOL:'#fbbf24',BTC:'#f7931a','RU-Card':'#818cf8',Stripe:'#818cf8'};
+    const colors={crypto:'#fbbf24',card:'#818cf8',paypal:'#3b82f6',sol:'#fbbf24',btc:'#f7931a','ru-card':'#818cf8',stripe:'#818cf8'};
     c.innerHTML=Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([n,v])=>
-        `<div class="item"><span class="name">${n}</span><div class="bar"><div class="bar-fill" style="width:${v/total*100}%;background:${colors[n]||'#6b7280'}"></div></div><span class="val">${v}</span></div>`
+        `<div class="item"><span class="name">${n}</span><div class="bar"><div class="bar-fill" style="width:${v/total*100}%;background:${colors[n.toLowerCase()]||'#6b7280'}"></div></div><span class="val">${v}</span></div>`
     ).join('')
 }
 
@@ -207,7 +178,8 @@ function renderBuyers(b){
     const c=document.getElementById('t-buyers');
     if(!b.length){c.innerHTML='<div class="no-data">No data</div>';return}
     c.innerHTML=b.map((x,i)=>{
-        const hasReview=reviewerIds.has(String(x.id));
+        const idStr=String(x.id||'');
+        const hasReview=idStr&&reviewerIds.has(idStr);
         const cls=hasReview?'name reviewer':'name';
         return `<div class="item"><span class="rank ${i<3?['g','s','b'][i]:''}">${i+1}</span><span class="${cls}">${x.name}</span><span class="val">${x.orders} • €${x.spent.toFixed(2)}</span></div>`
     }).join('')
@@ -217,12 +189,12 @@ function renderOrders(orders){
     const t=document.getElementById('o-body');
     document.getElementById('o-badge').textContent=orders.length;
     if(!orders.length){t.innerHTML='<tr><td colspan="7" class="no-data">No orders</td></tr>';return}
-    
     t.innerHTML=orders.map((x,i)=>{
         const d=new Date(x.timestamp);
         const ds=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-        const m=(x.payment_method||'Other').toLowerCase().replace(/[^a-z]/g,'');
-        const hasReview=reviewerIds.has(String(x.buyer_id));
+        const m=(x.payment_method||'other').toLowerCase().replace(/[^a-z]/g,'');
+        const idStr=String(x.buyer_id||'');
+        const hasReview=idStr&&reviewerIds.has(idStr);
         const cls=hasReview?'reviewer':'';
         return `<tr><td>#${i+1}</td><td><span class="${cls}">${x.buyer_name||'?'}</span></td><td class="hm">${x.items_short||'-'}</td><td><span class="pay ${m}">${x.payment_method||'?'}</span></td><td>€${(x.total_cost||0).toFixed(2)}</td><td class="hm">${ds}</td><td><button class="vbtn" onclick="showOrder(${i})">View</button></td></tr>`
     }).join('')
@@ -232,14 +204,12 @@ function renderMembers(d){
     document.getElementById('m-total').textContent=d.total_members||0;
     document.getElementById('m-new').textContent=d.recent_members?.length||0;
     document.getElementById('m-buyers').textContent=d.buyers_count||0;
-    
     const list=document.getElementById('m-list');
     if(!d.recent_members?.length){list.innerHTML='<div class="no-data">No recent members</div>';return}
-    
     list.innerHTML=d.recent_members.map(m=>{
         const date=new Date(m.joined_at);
         const dateStr=date.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-        const ava=m.avatar?`<img src="${m.avatar}">`:'';
+        const ava=m.avatar?`<img src="${m.avatar}">`:(m.name?m.name[0]:'?');
         const cls=m.has_order?'m-item has-order':'m-item';
         return `<div class="${cls}"><div class="m-ava">${ava}</div><div><div class="m-name">${m.name}</div><div class="m-date">Joined ${dateStr}</div></div></div>`
     }).join('')
@@ -248,10 +218,8 @@ function renderMembers(d){
 function renderReviews(d){
     document.getElementById('r-total').textContent=d.total_reviews||0;
     document.getElementById('r-avg').textContent=d.average_rating||'5.0';
-    
     const list=document.getElementById('r-list');
     if(!d.reviews?.length){list.innerHTML='<div class="no-data">No reviews yet</div>';return}
-    
     list.innerHTML=d.reviews.map(r=>{
         const date=new Date(r.timestamp);
         const dateStr=date.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
@@ -268,10 +236,9 @@ function showOrder(i){
     const d=new Date(o.timestamp);
     const ds=d.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
     let items='';
-    if(o.items_full?.length){
-        items=o.items_full.map(x=>`<div class="m-item-order"><span>${x.name||'?'}</span><span>x${x.qty||1} • €${((x.price||0)*(x.qty||1)).toFixed(2)}</span></div>`).join('')
-    }
-    const hasReview=reviewerIds.has(String(o.buyer_id));
+    if(o.items_full?.length)items=o.items_full.map(x=>`<div class="m-item-order"><span>${x.name||'?'}</span><span>x${x.qty||1} • €${((x.price||0)*(x.qty||1)).toFixed(2)}</span></div>`).join('');
+    const idStr=String(o.buyer_id||'');
+    const hasReview=idStr&&reviewerIds.has(idStr);
     const badge=hasReview?' ⭐':'';
     document.getElementById('modal-body').innerHTML=`
         <h2 class="m-title">Order #${i+1}</h2>
@@ -295,19 +262,11 @@ async function createToken(){
     try{
         const r=await fetch(API+'/tokens/create',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({name,max_uses:uses})});
         const d=await r.json();
-        if(d.success){
-            document.getElementById('tk-new').textContent=d.token;
-            document.getElementById('tk-done').classList.remove('hide');
-            loadTokens()
-        }
+        if(d.success){document.getElementById('tk-new').textContent=d.token;document.getElementById('tk-done').classList.remove('hide');loadTokens()}
     }catch{}
 }
 
-function copyToken(){
-    navigator.clipboard.writeText(document.getElementById('tk-new').textContent);
-    document.getElementById('tk-copy').textContent='Copied!';
-    setTimeout(()=>document.getElementById('tk-copy').textContent='Copy',2000)
-}
+function copyToken(){navigator.clipboard.writeText(document.getElementById('tk-new').textContent);document.getElementById('tk-copy').textContent='Copied!';setTimeout(()=>document.getElementById('tk-copy').textContent='Copy',2000)}
 
 async function loadTokens(){
     if(!isAdmin)return;
@@ -322,10 +281,7 @@ async function loadTokens(){
 
 async function delToken(id){
     if(!confirm('Delete?'))return;
-    try{
-        await fetch(API+'/tokens/delete',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({id})});
-        loadTokens()
-    }catch{}
+    try{await fetch(API+'/tokens/delete',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({id})});loadTokens()}catch{}
 }
 
 async function loadLogs(){
@@ -333,40 +289,37 @@ async function loadLogs(){
     try{
         const r1=await fetch(API+'/logs/login',{headers:{'Authorization':'Bearer '+token}});
         const d1=await r1.json();
-        document.getElementById('log-login').innerHTML=d1.logs?.length?d1.logs.map(l=>{
-            const t=new Date(l.timestamp);
-            return `<div class="log ${l.success?'success':'error'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.token_type} from ${l.ip||'?'} ${l.success?'✓':'✗'}</div></div>`
-        }).join(''):'<div class="no-data">No logs</div>'
+        document.getElementById('log-login').innerHTML=d1.logs?.length?d1.logs.map(l=>{const t=new Date(l.timestamp);return `<div class="log ${l.success?'success':'error'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.token_type} ${l.success?'✓':'✗'}</div></div>`}).join(''):'<div class="no-data">No logs</div>'
     }catch{}
     try{
         const r2=await fetch(API+'/logs/bot',{headers:{'Authorization':'Bearer '+token}});
         const d2=await r2.json();
-        document.getElementById('log-bot').innerHTML=d2.logs?.length?d2.logs.map(l=>{
-            const t=new Date(l.timestamp);
-            return `<div class="log ${l.level||'info'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.message}</div></div>`
-        }).join(''):'<div class="no-data">No logs</div>'
+        document.getElementById('log-bot').innerHTML=d2.logs?.length?d2.logs.map(l=>{const t=new Date(l.timestamp);return `<div class="log ${l.level||'info'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.message}</div></div>`}).join(''):'<div class="no-data">No logs</div>'
     }catch{}
+}
+
+function switchTab(btn){
+    const tabs=btn.parentElement;
+    const wrap=tabs.nextElementSibling;
+    tabs.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    wrap.querySelectorAll('.tab').forEach(t=>t.classList.remove('show'));
+    document.getElementById('t-'+btn.dataset.t).classList.add('show')
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
     loader();
-    
     document.getElementById('btn-login').onclick=login;
     document.getElementById('inp-token').onkeypress=e=>e.key==='Enter'&&login();
     document.getElementById('logout').onclick=logout;
     document.getElementById('modal-x').onclick=closeModal;
     document.getElementById('modal').onclick=e=>e.target.id==='modal'&&closeModal();
-    
     document.getElementById('btn-admin').onclick=showAdminForm;
     document.getElementById('btn-back1').onclick=backToToken;
     document.getElementById('btn-send').onclick=sendCode;
-    document.getElementById('btn-back2').onclick=()=>{
-        document.getElementById('form-code').classList.add('hide');
-        document.getElementById('form-pass').classList.remove('hide')
-    };
+    document.getElementById('btn-back2').onclick=()=>{document.getElementById('form-code').classList.add('hide');document.getElementById('form-pass').classList.remove('hide')};
     document.getElementById('btn-verify').onclick=verifyCode;
     document.getElementById('inp-code').onkeypress=e=>e.key==='Enter'&&verifyCode();
-    
     document.getElementById('tk-create').onclick=createToken;
     document.getElementById('tk-copy').onclick=copyToken;
     
@@ -382,15 +335,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('filter-pay').onchange=e=>{filterPay=e.target.value;render()};
     document.getElementById('filter-reset').onclick=()=>{filterPay='all';document.getElementById('filter-pay').value='all';render()};
     
-    document.querySelectorAll('.tabs button').forEach(b=>{
-        b.onclick=()=>{
-            const p=b.parentElement;
-            p.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
-            b.classList.add('active');
-            p.parentElement.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-            document.getElementById('t-'+b.dataset.t).classList.add('active')
-        }
-    });
+    document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>switchTab(b));
     
     document.querySelectorAll('#nav .nav').forEach(n=>{
         n.onclick=e=>{
@@ -408,14 +353,8 @@ document.addEventListener('DOMContentLoaded',()=>{
         }
     });
     
-    document.getElementById('menu-btn').onclick=()=>{
-        document.getElementById('side').classList.toggle('open');
-        document.getElementById('overlay').classList.toggle('show')
-    };
-    document.getElementById('overlay').onclick=()=>{
-        document.getElementById('side').classList.remove('open');
-        document.getElementById('overlay').classList.remove('show')
-    };
+    document.getElementById('menu-btn').onclick=()=>{document.getElementById('side').classList.toggle('open');document.getElementById('overlay').classList.toggle('show')};
+    document.getElementById('overlay').onclick=()=>{document.getElementById('side').classList.remove('open');document.getElementById('overlay').classList.remove('show')};
     
     setInterval(()=>token&&fetchStats(),30000)
 });
