@@ -60,6 +60,7 @@
             <div class="side-logo">DOT<span>.</span></div>
             <nav id="nav">
                 <a href="#" class="nav active" data-s="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview</a>
+                <a href="#" class="nav" data-s="members"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Members</a>
                 <a href="#" class="nav" data-s="reviews"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Reviews</a>
                 <a href="#" class="nav admin-nav hide" data-s="admin"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admin Panel</a>
             </nav>
@@ -86,13 +87,10 @@
                     </div>
                 </header>
 
-                <!-- Filters -->
                 <div class="filters">
                     <div class="filter">
                         <label>Payment Method</label>
-                        <select id="filter-pay">
-                            <option value="all">All Methods</option>
-                        </select>
+                        <select id="filter-pay"><option value="all">All Methods</option></select>
                     </div>
                     <button class="filter-reset" id="filter-reset">Reset</button>
                 </div>
@@ -133,6 +131,20 @@
                             <tbody id="o-body"></tbody>
                         </table>
                     </div>
+                </div>
+            </section>
+
+            <!-- Members -->
+            <section class="sec" id="sec-members">
+                <header class="head"><h1>Members</h1></header>
+                <div class="m-stats">
+                    <div class="stat"><div class="stat-i">👥</div><div><span class="stat-l">Total</span><span class="stat-v" id="m-total">-</span></div></div>
+                    <div class="stat"><div class="stat-i">🆕</div><div><span class="stat-l">New (30d)</span><span class="stat-v" id="m-new">-</span></div></div>
+                    <div class="stat"><div class="stat-i">🛒</div><div><span class="stat-l">Buyers</span><span class="stat-v" id="m-buyers">-</span></div></div>
+                </div>
+                <div class="card">
+                    <h3>Recent Members</h3>
+                    <div class="m-list" id="m-list"><div class="loading">Loading...</div></div>
                 </div>
             </section>
 
