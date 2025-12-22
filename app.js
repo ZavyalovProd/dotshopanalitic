@@ -1,20 +1,16 @@
-var API_URL = 'https://api.dotinfo.com.ru/api';
-var currentPeriod = 'week';
-var isAuthenticated = false;
-var isAdmin = false;
-var authToken = null;
-var currentData = null;
+const API = 'https://api.dotinfo.com.ru/api';
+let period = 'week', token = null, isAdmin = false, data = null;
 
 // Loader
-function runLoader() {
-    var status = document.getElementById('loader-status');
-    var steps = ['Initializing...', 'Connecting...', 'Loading...', 'Welcome!'];
-    var i = 0;
-    var interval = setInterval(function() {
-        if (i < steps.length) { status.textContent = steps[i]; i++; }
+function loader() {
+    const el = document.getElementById('loader-status');
+    const steps = ['Initializing...', 'Connecting...', 'Loading...', 'Welcome!'];
+    let i = 0;
+    const int = setInterval(() => {
+        if (i < steps.length) el.textContent = steps[i++];
         else {
-            clearInterval(interval);
-            setTimeout(function() {
+            clearInterval(int);
+            setTimeout(() => {
                 document.getElementById('loader-screen').classList.add('hidden');
                 checkAuth();
             }, 300);
@@ -24,380 +20,415 @@ function runLoader() {
 
 // Auth
 function checkAuth() {
-    var saved = localStorage.getItem('dotshop_auth');
+    const saved = localStorage.getItem('dotshop_token');
     if (saved) {
-        try {
-            var data = JSON.parse(saved);
-            authToken = data.token;
-            isAdmin = data.isAdmin;
-            verifyToken();
-        } catch (e) { showLogin(); }
-    } else { showLogin(); }
+        token = saved;
+        verify();
+    } else showLogin();
 }
 
 function showLogin() {
     document.getElementById('login-screen').classList.add('visible');
 }
 
-async function verifyToken() {
+async function verify() {
     try {
-        var r = await fetch(API_URL + '/auth', {
+        const r = await fetch(API + '/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: authToken })
+            body: JSON.stringify({ token })
         });
-        var d = await r.json();
-        if (d.success) { isAdmin = d.is_admin; showDashboard(); }
-        else { localStorage.removeItem('dotshop_auth'); showLogin(); }
-    } catch (e) { showLogin(); }
+        const d = await r.json();
+        if (d.success) {
+            isAdmin = d.is_admin === true;
+            showDashboard();
+        } else {
+            localStorage.removeItem('dotshop_token');
+            showLogin();
+        }
+    } catch { showLogin(); }
 }
 
 async function login() {
-    var token = document.getElementById('token-input').value.trim();
-    if (!token) { showError('Enter token'); return; }
+    const t = document.getElementById('token-input').value.trim();
+    if (!t) return err('Enter token');
     
     try {
-        var r = await fetch(API_URL + '/auth', {
+        const r = await fetch(API + '/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token })
+            body: JSON.stringify({ token: t })
         });
-        var d = await r.json();
+        const d = await r.json();
         if (d.success) {
-            authToken = token;
-            isAdmin = d.is_admin;
-            localStorage.setItem('dotshop_auth', JSON.stringify({ token: token, isAdmin: isAdmin }));
+            token = t;
+            isAdmin = d.is_admin === true;
+            localStorage.setItem('dotshop_token', t);
             document.getElementById('login-screen').classList.remove('visible');
             showDashboard();
-        } else { showError(d.error || 'Invalid token'); }
-    } catch (e) { showError('Connection error'); }
+        } else err(d.error || 'Invalid token');
+    } catch { err('Connection error'); }
 }
 
 function logout() {
-    localStorage.removeItem('dotshop_auth');
-    authToken = null;
+    localStorage.removeItem('dotshop_token');
+    token = null;
     isAdmin = false;
-    isAuthenticated = false;
-    document.getElementById('dashboard').classList.remove('visible');
+    document.getElementById('dashboard').classList.remove('visible', 'admin-mode');
+    document.querySelectorAll('.admin-nav').forEach(e => e.classList.add('hidden'));
     showLogin();
 }
 
 function showDashboard() {
-    document.getElementById('dashboard').classList.add('visible');
-    isAuthenticated = true;
+    const dash = document.getElementById('dashboard');
+    dash.classList.add('visible');
+    
+    // Admin mode - show admin nav and red theme
     if (isAdmin) {
-        document.querySelectorAll('.admin-only').forEach(function(el) { el.classList.remove('hidden'); });
+        dash.classList.add('admin-mode');
+        document.querySelectorAll('.admin-nav').forEach(e => e.classList.remove('hidden'));
+    } else {
+        dash.classList.remove('admin-mode');
+        document.querySelectorAll('.admin-nav').forEach(e => e.classList.add('hidden'));
     }
+    
     fetchStats();
+    fetchReviews();
 }
 
-function showError(msg) {
-    var e = document.getElementById('login-error');
+function err(msg) {
+    const e = document.getElementById('login-error');
     e.textContent = msg;
-    setTimeout(function() { e.textContent = ''; }, 3000);
+    setTimeout(() => e.textContent = '', 3000);
 }
 
-// Admin login flow
-function showAdminLogin() {
+// Admin login
+function showAdminForm() {
     document.getElementById('token-login-form').classList.add('hidden');
-    document.getElementById('admin-password-form').classList.remove('hidden');
+    document.getElementById('admin-form').classList.remove('hidden');
 }
 
-function showTokenLogin() {
-    document.getElementById('admin-password-form').classList.add('hidden');
-    document.getElementById('code-verify-form').classList.add('hidden');
+function backToToken() {
+    document.getElementById('admin-form').classList.add('hidden');
+    document.getElementById('code-form').classList.add('hidden');
     document.getElementById('token-login-form').classList.remove('hidden');
 }
 
-async function requestCode() {
-    var pw = document.getElementById('admin-password').value.trim();
-    
-    if (!pw) { showError('Enter admin password'); return; }
+async function sendCode() {
+    const pw = document.getElementById('admin-password').value.trim();
+    if (!pw) return err('Enter password');
     
     try {
-        var r = await fetch(API_URL + '/admin/request-code', {
+        const r = await fetch(API + '/admin/request-code', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: pw })
         });
-        var d = await r.json();
+        const d = await r.json();
         if (d.success) {
-            document.getElementById('admin-password-form').classList.add('hidden');
-            document.getElementById('code-verify-form').classList.remove('hidden');
-            if (d.code) showError('Dev code: ' + d.code);
-        } else { showError(d.error || 'Error'); }
-    } catch (e) { showError('Connection error'); }
+            document.getElementById('admin-form').classList.add('hidden');
+            document.getElementById('code-form').classList.remove('hidden');
+        } else err(d.error || 'Error');
+    } catch { err('Connection error'); }
 }
 
 async function verifyCode() {
-    var code = document.getElementById('code-input').value.trim();
-    if (!code) { showError('Enter code'); return; }
+    const code = document.getElementById('code-input').value.trim();
+    if (!code) return err('Enter code');
     
     try {
-        var r = await fetch(API_URL + '/admin/verify-code', {
+        const r = await fetch(API + '/admin/verify-code', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: code })
+            body: JSON.stringify({ code })
         });
-        var d = await r.json();
+        const d = await r.json();
         if (d.success) {
-            authToken = d.admin_token;
+            token = d.admin_token;
             isAdmin = true;
-            localStorage.setItem('dotshop_auth', JSON.stringify({ token: authToken, isAdmin: true }));
+            localStorage.setItem('dotshop_token', token);
             document.getElementById('login-screen').classList.remove('visible');
             showDashboard();
-        } else { showError(d.error || 'Invalid code'); }
-    } catch (e) { showError('Connection error'); }
+        } else err(d.error || 'Invalid code');
+    } catch { err('Connection error'); }
 }
 
-// Connection
+// Status
 function setStatus(s) {
-    var el = document.getElementById('connection-status');
-    el.querySelector('.status-dot').className = 'status-dot ' + s;
-    el.querySelector('span').textContent = s === 'online' ? 'Connected' : s === 'connecting' ? 'Connecting...' : 'Offline';
-}
-
-function updateTime() {
-    var now = new Date();
-    document.getElementById('last-update').textContent = 'Updated: ' + now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+    const el = document.getElementById('status');
+    el.className = 'status ' + s;
+    el.querySelector('.status-text').textContent = s === 'online' ? 'Connected' : s === 'connecting' ? 'Connecting...' : 'Offline';
 }
 
 // Fetch
 async function fetchStats() {
-    if (!isAuthenticated || !authToken) return;
+    if (!token) return;
     setStatus('connecting');
     
     try {
-        var r = await fetch(API_URL + '/stats?period=' + currentPeriod, {
-            headers: { 'Authorization': 'Bearer ' + authToken }
+        const r = await fetch(API + '/stats?period=' + period, {
+            headers: { 'Authorization': 'Bearer ' + token }
         });
-        if (!r.ok) throw new Error();
-        var d = await r.json();
-        currentData = d;
+        if (!r.ok) throw 0;
+        data = await r.json();
         setStatus('online');
-        updateTime();
-        render(d);
-    } catch (e) { setStatus('offline'); }
+        document.getElementById('update-time').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+        render();
+    } catch { setStatus('offline'); }
+}
+
+async function fetchReviews() {
+    if (!token) return;
+    
+    try {
+        const r = await fetch(API + '/reviews', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const d = await r.json();
+        renderReviews(d);
+    } catch {}
 }
 
 // Render
-function render(d) {
-    document.getElementById('total-orders').textContent = d.total_orders || 0;
-    document.getElementById('total-reviews').textContent = d.total_reviews || 0;
-    document.getElementById('unique-buyers').textContent = d.unique_buyers || 0;
-    document.getElementById('total-revenue').textContent = '€' + (d.revenue_eur || 0).toFixed(2);
-    document.getElementById('revenue-eur').textContent = '€' + (d.revenue_eur || 0).toFixed(2);
-    document.getElementById('revenue-usd').textContent = '$' + (d.revenue_usd || 0).toFixed(2);
-    document.getElementById('revenue-rub').textContent = '₽' + Math.round(d.revenue_rub || 0).toLocaleString();
-    document.getElementById('reviews-total').textContent = d.total_reviews || 0;
+function render() {
+    if (!data) return;
     
-    renderPayments(d.payment_methods || {});
-    renderProducts(d.top_products || []);
-    renderBuyers(d.top_buyers || []);
-    renderOrders(d.recent_orders || []);
+    document.getElementById('stat-orders').textContent = data.total_orders || 0;
+    document.getElementById('stat-reviews').textContent = data.total_reviews || 0;
+    document.getElementById('stat-buyers').textContent = data.unique_buyers || 0;
+    document.getElementById('stat-revenue').textContent = '€' + (data.revenue_eur || 0).toFixed(2);
+    
+    document.getElementById('cur-eur').textContent = '€' + (data.revenue_eur || 0).toFixed(2);
+    document.getElementById('cur-usd').textContent = '$' + (data.revenue_usd || 0).toFixed(2);
+    document.getElementById('cur-rub').textContent = '₽' + Math.round(data.revenue_rub || 0).toLocaleString();
+    
+    renderPayments(data.payment_methods || {});
+    renderProducts(data.top_products || []);
+    renderBuyers(data.top_buyers || []);
+    renderOrders(data.recent_orders || []);
 }
 
 function renderPayments(m) {
-    var c = document.getElementById('payment-methods');
-    var total = Object.values(m).reduce((a,b) => a+b, 0);
-    if (total === 0) { c.innerHTML = '<div class="no-data">No data</div>'; return; }
+    const c = document.getElementById('tab-payments');
+    const total = Object.values(m).reduce((a,b) => a+b, 0);
+    if (!total) { c.innerHTML = '<div class="no-data">No data</div>'; return; }
     
-    var colors = {Crypto:'#fbbf24',Card:'#818cf8',PayPal:'#3b82f6',Stripe:'#818cf8',SOL:'#fbbf24',BTC:'#f7931a','RU-Card':'#818cf8'};
-    c.innerHTML = Object.entries(m).sort((a,b) => b[1]-a[1]).map(([n,v]) => {
-        var pct = (v/total)*100;
-        return `<div class="list-item"><span class="list-name">${n}</span><div class="payment-bar"><div class="payment-fill" style="width:${pct}%;background:${colors[n]||'#6b7280'}"></div></div><span class="list-value">${v}</span></div>`;
-    }).join('');
+    const colors = {Crypto:'#fbbf24',Card:'#818cf8',PayPal:'#3b82f6',SOL:'#fbbf24',BTC:'#f7931a','RU-Card':'#818cf8'};
+    c.innerHTML = Object.entries(m).sort((a,b) => b[1]-a[1]).map(([n,v]) => 
+        `<div class="list-item"><span class="name">${n}</span><div class="bar"><div class="bar-fill" style="width:${v/total*100}%;background:${colors[n]||'#6b7280'}"></div></div><span class="val">${v}</span></div>`
+    ).join('');
 }
 
 function renderProducts(p) {
-    var c = document.getElementById('top-products');
+    const c = document.getElementById('tab-products');
     if (!p.length) { c.innerHTML = '<div class="no-data">No data</div>'; return; }
-    c.innerHTML = p.map((x,i) => `<div class="list-item"><span class="list-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</span><span class="list-name">${x.name}</span><span class="list-value">${x.sold} • €${x.revenue.toFixed(2)}</span></div>`).join('');
+    c.innerHTML = p.map((x,i) => `<div class="list-item"><span class="rank ${i<3?['g','s','b'][i]:''}">${i+1}</span><span class="name">${x.name}</span><span class="val">${x.sold} • €${x.revenue.toFixed(2)}</span></div>`).join('');
 }
 
 function renderBuyers(b) {
-    var c = document.getElementById('top-buyers');
+    const c = document.getElementById('tab-buyers');
     if (!b.length) { c.innerHTML = '<div class="no-data">No data</div>'; return; }
-    c.innerHTML = b.map((x,i) => `<div class="list-item"><span class="list-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</span><span class="list-name">${x.name}</span><span class="list-value">${x.orders} • €${x.spent.toFixed(2)}</span></div>`).join('');
+    c.innerHTML = b.map((x,i) => `<div class="list-item"><span class="rank ${i<3?['g','s','b'][i]:''}">${i+1}</span><span class="name">${x.name}</span><span class="val">${x.orders} • €${x.spent.toFixed(2)}</span></div>`).join('');
 }
 
 function renderOrders(o) {
-    var t = document.getElementById('orders-table');
-    document.getElementById('orders-count').textContent = o.length + ' orders';
+    const t = document.getElementById('orders-tbody');
+    document.getElementById('orders-badge').textContent = o.length;
     if (!o.length) { t.innerHTML = '<tr><td colspan="7" class="no-data">No orders</td></tr>'; return; }
     
     t.innerHTML = o.map((x,i) => {
-        var d = new Date(x.timestamp);
-        var ds = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-        var m = (x.payment_method||'Other').toLowerCase().replace(/[^a-z]/g,'');
-        return `<tr><td>#${i+1}</td><td>${x.buyer_name||'?'}</td><td class="hide-mobile">${x.items_short||'-'}</td><td><span class="payment-badge ${m}">${x.payment_method||'Other'}</span></td><td>€${(x.total_cost||0).toFixed(2)}</td><td class="hide-mobile">${ds}</td><td><button class="view-btn" onclick="showModal(${i})">View</button></td></tr>`;
+        const d = new Date(x.timestamp);
+        const ds = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+        const m = (x.payment_method||'Other').toLowerCase().replace(/[^a-z]/g,'');
+        return `<tr><td>#${i+1}</td><td>${x.buyer_name||'?'}</td><td class="hide-m">${x.items_short||'-'}</td><td><span class="pay ${m}">${x.payment_method||'?'}</span></td><td>€${(x.total_cost||0).toFixed(2)}</td><td class="hide-m">${ds}</td><td><button class="view-btn" onclick="showOrder(${i})">View</button></td></tr>`;
+    }).join('');
+}
+
+function renderReviews(d) {
+    document.getElementById('reviews-total').textContent = d.total_reviews || 0;
+    
+    const list = document.getElementById('reviews-list');
+    if (!d.reviews || !d.reviews.length) {
+        list.innerHTML = '<div class="no-data">No reviews yet</div>';
+        return;
+    }
+    
+    list.innerHTML = d.reviews.map(r => {
+        const date = new Date(r.timestamp);
+        const dateStr = date.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+        const avatar = r.avatar ? `<img src="${r.avatar}" alt="">` : r.author[0];
+        const images = r.attachments?.length ? `<div class="review-images">${r.attachments.map(a => `<img src="${a}" onclick="window.open('${a}')">`).join('')}</div>` : '';
+        
+        return `<div class="review-card">
+            <div class="review-header">
+                <div class="review-avatar">${avatar}</div>
+                <div><div class="review-author">${r.author}</div><div class="review-date">${dateStr}</div></div>
+            </div>
+            <div class="review-stars">${'⭐'.repeat(r.stars || 5)}</div>
+            <div class="review-text">${r.content}</div>
+            ${images}
+        </div>`;
     }).join('');
 }
 
 // Modal
-function showModal(i) {
-    if (!currentData || !currentData.recent_orders[i]) return;
-    var o = currentData.recent_orders[i];
-    var d = new Date(o.timestamp);
-    var ds = d.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+function showOrder(i) {
+    if (!data?.recent_orders?.[i]) return;
+    const o = data.recent_orders[i];
+    const d = new Date(o.timestamp);
+    const ds = d.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
     
-    var items = '';
-    if (o.items_full && o.items_full.length) {
-        items = o.items_full.map(x => `<div class="modal-item"><span>${x.name||'?'}</span><span>x${x.qty||1} • €${((x.price||0)*(x.qty||1)).toFixed(2)}</span></div>`).join('');
+    let items = '';
+    if (o.items_full?.length) {
+        items = o.items_full.map(x => `<div class="m-item"><span>${x.name||'?'}</span><span>x${x.qty||1} • €${((x.price||0)*(x.qty||1)).toFixed(2)}</span></div>`).join('');
     }
     
-    document.getElementById('modal-content').innerHTML = `
-        <h2 class="modal-title">Order #${i+1}</h2>
-        <div class="modal-row"><span class="modal-label">Buyer</span><span class="modal-value">${o.buyer_name||'?'}</span></div>
-        <div class="modal-row"><span class="modal-label">Nickname</span><span class="modal-value">${o.nickname||'N/A'}</span></div>
-        <div class="modal-row"><span class="modal-label">Coordinates</span><span class="modal-value">${o.coordinates||'N/A'}</span></div>
-        <div class="modal-row"><span class="modal-label">Payment</span><span class="modal-value">${o.payment_method||'N/A'}</span></div>
-        <div class="modal-row"><span class="modal-label">Delivery</span><span class="modal-value">${o.delivery_speed||'Default'}</span></div>
-        <div class="modal-row"><span class="modal-label">Delivered by</span><span class="modal-value">${o.delivery_person||'N/A'}</span></div>
-        <div class="modal-row"><span class="modal-label">Date</span><span class="modal-value">${ds}</span></div>
-        <div class="modal-row"><span class="modal-label">Total</span><span class="modal-value" style="color:#ffb070;font-weight:700">€${(o.total_cost||0).toFixed(2)}</span></div>
-        <div class="modal-items"><h4>Items</h4>${items||'<div class="no-data">No items</div>'}</div>
-    `;
-    document.getElementById('order-modal').classList.add('visible');
+    document.getElementById('modal-body').innerHTML = `
+        <h2 class="m-title">Order #${i+1}</h2>
+        <div class="m-row"><span>Buyer</span><span>${o.buyer_name||'?'}</span></div>
+        <div class="m-row"><span>Nickname</span><span>${o.nickname||'N/A'}</span></div>
+        <div class="m-row"><span>Coordinates</span><span>${o.coordinates||'N/A'}</span></div>
+        <div class="m-row"><span>Payment</span><span>${o.payment_method||'N/A'}</span></div>
+        <div class="m-row"><span>Delivery</span><span>${o.delivery_speed||'Default'}</span></div>
+        <div class="m-row"><span>Delivered by</span><span>${o.delivery_person||'N/A'}</span></div>
+        <div class="m-row"><span>Date</span><span>${ds}</span></div>
+        <div class="m-row"><span>Total</span><span style="color:#ffb070;font-weight:700">€${(o.total_cost||0).toFixed(2)}</span></div>
+        <div class="m-items"><h4>Items</h4>${items||'<div class="no-data">No items</div>'}</div>`;
+    document.getElementById('modal').classList.add('visible');
 }
 
-function closeModal() {
-    document.getElementById('order-modal').classList.remove('visible');
-}
+function closeModal() { document.getElementById('modal').classList.remove('visible'); }
 
 // Admin
 async function createToken() {
-    var name = document.getElementById('new-token-name').value.trim() || 'Token';
-    var uses = parseInt(document.getElementById('new-token-uses').value) || -1;
+    const name = document.getElementById('token-name').value.trim() || 'Token';
+    const uses = parseInt(document.getElementById('token-uses').value) || -1;
     
     try {
-        var r = await fetch(API_URL + '/tokens/create', {
+        const r = await fetch(API + '/tokens/create', {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, max_uses: uses })
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, max_uses: uses })
         });
-        var d = await r.json();
+        const d = await r.json();
         if (d.success) {
-            document.getElementById('new-token-value').textContent = d.token;
-            document.getElementById('token-result').classList.remove('hidden');
+            document.getElementById('new-token').textContent = d.token;
+            document.getElementById('token-created').classList.remove('hidden');
             loadTokens();
         }
-    } catch (e) {}
+    } catch {}
 }
 
 function copyToken() {
-    navigator.clipboard.writeText(document.getElementById('new-token-value').textContent);
-    document.getElementById('copy-token-btn').textContent = 'Copied!';
-    setTimeout(() => document.getElementById('copy-token-btn').textContent = 'Copy', 2000);
+    navigator.clipboard.writeText(document.getElementById('new-token').textContent);
+    document.getElementById('copy-btn').textContent = 'Copied!';
+    setTimeout(() => document.getElementById('copy-btn').textContent = 'Copy', 2000);
 }
 
 async function loadTokens() {
     if (!isAdmin) return;
     try {
-        var r = await fetch(API_URL + '/tokens', { headers: { 'Authorization': 'Bearer ' + authToken } });
-        var d = await r.json();
-        var c = document.getElementById('tokens-list');
-        if (!d.tokens || !d.tokens.length) { c.innerHTML = '<div class="no-data">No tokens</div>'; return; }
-        c.innerHTML = d.tokens.map(t => `<div class="token-item"><div class="token-info"><div class="token-name">${t.name}</div><div class="token-meta">ID: ${t.id} • Uses: ${t.max_uses===-1?'∞':t.current_uses+'/'+t.max_uses}</div></div><button class="delete-btn" onclick="deleteToken('${t.id}')">Delete</button></div>`).join('');
-    } catch (e) {}
+        const r = await fetch(API + '/tokens', { headers: { 'Authorization': 'Bearer ' + token } });
+        const d = await r.json();
+        const c = document.getElementById('tokens-list');
+        if (!d.tokens?.length) { c.innerHTML = '<div class="no-data">No tokens</div>'; return; }
+        c.innerHTML = d.tokens.map(t => `<div class="token-item"><div class="info"><div class="name">${t.name}</div><div class="meta">ID: ${t.id} • Uses: ${t.max_uses===-1?'∞':t.current_uses+'/'+t.max_uses}</div></div><button class="del" onclick="delToken('${t.id}')">Del</button></div>`).join('');
+    } catch {}
 }
 
-async function deleteToken(id) {
+async function delToken(id) {
     if (!confirm('Delete?')) return;
     try {
-        await fetch(API_URL + '/tokens/delete', {
+        await fetch(API + '/tokens/delete', {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: id })
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
         });
         loadTokens();
-    } catch (e) {}
+    } catch {}
 }
 
-async function loadLoginLogs() {
+async function loadLogs() {
     if (!isAdmin) return;
+    
     try {
-        var r = await fetch(API_URL + '/logs/login', { headers: { 'Authorization': 'Bearer ' + authToken } });
-        var d = await r.json();
-        var c = document.getElementById('login-logs');
-        if (!d.logs || !d.logs.length) { c.innerHTML = '<div class="no-data">No logs</div>'; return; }
-        c.innerHTML = d.logs.map(l => {
-            var t = new Date(l.timestamp);
-            return `<div class="log-item ${l.success?'success':'error'}"><div class="log-time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="log-msg">${l.token_type} from ${l.ip||'?'} ${l.success?'✓':'✗ '+( l.reason||'')}</div></div>`;
-        }).join('');
-    } catch (e) {}
-}
-
-async function loadBotLogs() {
-    if (!isAdmin) return;
+        const r1 = await fetch(API + '/logs/login', { headers: { 'Authorization': 'Bearer ' + token } });
+        const d1 = await r1.json();
+        const c1 = document.getElementById('login-logs');
+        c1.innerHTML = d1.logs?.length ? d1.logs.map(l => {
+            const t = new Date(l.timestamp);
+            return `<div class="log ${l.success?'success':'error'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.token_type} from ${l.ip||'?'} ${l.success?'✓':'✗'}</div></div>`;
+        }).join('') : '<div class="no-data">No logs</div>';
+    } catch {}
+    
     try {
-        var r = await fetch(API_URL + '/logs/bot', { headers: { 'Authorization': 'Bearer ' + authToken } });
-        var d = await r.json();
-        var c = document.getElementById('bot-logs');
-        if (!d.logs || !d.logs.length) { c.innerHTML = '<div class="no-data">No logs</div>'; return; }
-        c.innerHTML = d.logs.map(l => {
-            var t = new Date(l.timestamp);
-            return `<div class="log-item ${l.level||'info'}"><div class="log-time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="log-msg">${l.message}</div></div>`;
-        }).join('');
-    } catch (e) {}
+        const r2 = await fetch(API + '/logs/bot', { headers: { 'Authorization': 'Bearer ' + token } });
+        const d2 = await r2.json();
+        const c2 = document.getElementById('bot-logs');
+        c2.innerHTML = d2.logs?.length ? d2.logs.map(l => {
+            const t = new Date(l.timestamp);
+            return `<div class="log ${l.level||'info'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.message}</div></div>`;
+        }).join('') : '<div class="no-data">No logs</div>';
+    } catch {}
 }
 
 // Events
-document.addEventListener('DOMContentLoaded', function() {
-    runLoader();
+document.addEventListener('DOMContentLoaded', () => {
+    loader();
     
     document.getElementById('login-btn').onclick = login;
-    document.getElementById('token-input').onkeypress = e => e.key==='Enter' && login();
+    document.getElementById('token-input').onkeypress = e => e.key === 'Enter' && login();
     document.getElementById('logout-btn').onclick = logout;
-    document.getElementById('modal-close').onclick = closeModal;
-    document.getElementById('order-modal').onclick = e => e.target.id==='order-modal' && closeModal();
+    document.getElementById('modal-x').onclick = closeModal;
+    document.getElementById('modal').onclick = e => e.target.id === 'modal' && closeModal();
     
-    document.getElementById('admin-login-btn').onclick = showAdminLogin;
-    document.getElementById('back-to-token').onclick = showTokenLogin;
-    document.getElementById('request-code-btn').onclick = requestCode;
-    document.getElementById('back-to-password').onclick = () => {
-        document.getElementById('code-verify-form').classList.add('hidden');
-        document.getElementById('admin-password-form').classList.remove('hidden');
+    document.getElementById('admin-login-btn').onclick = showAdminForm;
+    document.getElementById('back-btn-1').onclick = backToToken;
+    document.getElementById('send-code-btn').onclick = sendCode;
+    document.getElementById('back-btn-2').onclick = () => {
+        document.getElementById('code-form').classList.add('hidden');
+        document.getElementById('admin-form').classList.remove('hidden');
     };
-    document.getElementById('verify-code-btn').onclick = verifyCode;
-    document.getElementById('code-input').onkeypress = e => e.key==='Enter' && verifyCode();
+    document.getElementById('verify-btn').onclick = verifyCode;
+    document.getElementById('code-input').onkeypress = e => e.key === 'Enter' && verifyCode();
     
     document.getElementById('create-token-btn').onclick = createToken;
-    document.getElementById('copy-token-btn').onclick = copyToken;
+    document.getElementById('copy-btn').onclick = copyToken;
     
-    document.querySelectorAll('.period-btn').forEach(b => {
-        b.onclick = function() {
-            document.querySelectorAll('.period-btn').forEach(x => x.classList.remove('active'));
-            this.classList.add('active');
-            currentPeriod = this.dataset.period;
+    document.querySelectorAll('#periods button').forEach(b => {
+        b.onclick = () => {
+            document.querySelectorAll('#periods button').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            period = b.dataset.period;
             fetchStats();
         };
     });
     
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.onclick = function() {
-            document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
-            this.classList.add('active');
-            document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+    document.querySelectorAll('.tabs button').forEach(b => {
+        b.onclick = () => {
+            const p = b.parentElement;
+            p.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            p.parentElement.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+            document.getElementById('tab-' + b.dataset.tab).classList.add('active');
         };
     });
     
-    document.querySelectorAll('.nav-item[data-section]').forEach(n => {
-        n.onclick = function(e) {
+    document.querySelectorAll('#nav .nav-item').forEach(n => {
+        n.onclick = e => {
             e.preventDefault();
-            var s = this.dataset.section;
-            document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+            const s = n.dataset.section;
+            document.querySelectorAll('#nav .nav-item').forEach(x => x.classList.remove('active'));
             document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
-            this.classList.add('active');
+            n.classList.add('active');
             document.getElementById('section-' + s).classList.add('active');
-            if (s === 'admin' && isAdmin) { loadTokens(); loadLoginLogs(); loadBotLogs(); }
+            if (s === 'admin' && isAdmin) { loadTokens(); loadLogs(); }
             document.getElementById('sidebar').classList.remove('open');
             document.getElementById('overlay').classList.remove('visible');
         };
     });
     
-    document.getElementById('mobile-menu-btn').onclick = () => {
+    document.getElementById('menu-btn').onclick = () => {
         document.getElementById('sidebar').classList.toggle('open');
         document.getElementById('overlay').classList.toggle('visible');
     };
@@ -406,5 +437,5 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('overlay').classList.remove('visible');
     };
     
-    setInterval(() => isAuthenticated && fetchStats(), 30000);
+    setInterval(() => token && fetchStats(), 30000);
 });
