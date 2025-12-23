@@ -209,8 +209,9 @@ function renderOrders(orders){
 function renderMembers(d){
     document.getElementById('m-total').textContent=d.total_members||0;
     const recentCount=d.recent_members?.length||0;
-    document.getElementById('m-new').textContent=recentCount;
-    document.getElementById('m-left').textContent=d.left_count||0;
+    const leftCount=d.left_count||0;
+    // Show joined with left in brackets if any
+    document.getElementById('m-new').textContent=leftCount>0?`${recentCount} (-${leftCount})`:recentCount;
     document.getElementById('m-buyers').textContent=d.buyers_count||0;
     document.getElementById('m-count').textContent=`(${recentCount})`;
     const list=document.getElementById('m-list');

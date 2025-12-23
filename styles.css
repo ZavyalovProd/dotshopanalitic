@@ -113,6 +113,8 @@ nav{display:flex;flex-direction:column;gap:4px}
 .card.tall .m-list{max-height:420px}
 .dash.admin .periods button::before{background:linear-gradient(135deg,#ef4444,#dc2626)}
 .dash.admin .periods button:hover{background:rgba(239,68,68,.15)}
+.dash.admin .modal-box{border-color:rgba(239,68,68,.3)}
+.dash.admin .item:hover{background:rgba(239,68,68,.05)}
 
 .filters{display:flex;gap:12px;margin-bottom:15px;flex-wrap:wrap;align-items:flex-end}
 .filter{display:flex;flex-direction:column;gap:4px}
@@ -215,7 +217,8 @@ tr:hover td{background:rgba(255,150,80,.03)}
 .discord:hover{background:#4752c4;transform:translateY(-2px)}
 .loading{text-align:center;color:rgba(255,255,255,.4);padding:25px;font-size:.85rem}
 
-.date-picker{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:1001}
+.date-picker{position:fixed;inset:0;background:rgba(0,0,0,.8);align-items:center;justify-content:center;z-index:1001;display:flex}
+.date-picker.hide{display:none}
 .dp-inner{background:#111;border:1px solid rgba(255,150,80,.2);border-radius:12px;padding:20px;width:280px}
 .dp-inner h4{margin-bottom:15px;color:#ffb070}
 .dp-row{margin-bottom:12px}
