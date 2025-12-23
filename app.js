@@ -90,7 +90,11 @@ async function fetchStats(){
     if(!token)return;
     setConn('wait');
     try{
-        const r=await fetch(API+'/stats?period='+period,{headers:{'Authorization':'Bearer '+token}});
+        let url=API+'/stats?period='+period;
+        if(period==='custom'&&customDateFrom&&customDateTo){
+            url+=`&from=${customDateFrom}&to=${customDateTo}`
+        }
+        const r=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
         if(!r.ok)throw 0;
         data=await r.json();
         allOrders=data.recent_orders||[];
@@ -206,6 +210,7 @@ function renderMembers(d){
     document.getElementById('m-total').textContent=d.total_members||0;
     const recentCount=d.recent_members?.length||0;
     document.getElementById('m-new').textContent=recentCount;
+    document.getElementById('m-left').textContent=d.left_count||0;
     document.getElementById('m-buyers').textContent=d.buyers_count||0;
     document.getElementById('m-count').textContent=`(${recentCount})`;
     const list=document.getElementById('m-list');
@@ -334,6 +339,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.querySelectorAll('#periods button').forEach(b=>{
         b.innerHTML=`<span>${b.textContent}</span>`;
         b.onclick=()=>{
+            if(b.dataset.p==='custom'){
+                document.getElementById('date-picker').classList.remove('hide');
+                document.getElementById('date-picker').dataset.target='overview';
+                return
+            }
             document.querySelectorAll('#periods button').forEach(x=>x.classList.remove('active'));
             b.classList.add('active');
             period=b.dataset.p;
@@ -355,6 +365,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         b.onclick=()=>{
             if(b.dataset.p==='custom'){
                 document.getElementById('date-picker').classList.remove('hide');
+                document.getElementById('date-picker').dataset.target='members';
                 return
             }
             document.querySelectorAll('#m-periods button').forEach(x=>x.classList.remove('active'));
@@ -367,14 +378,29 @@ document.addEventListener('DOMContentLoaded',()=>{
     // Date picker
     document.getElementById('dp-cancel').onclick=()=>document.getElementById('date-picker').classList.add('hide');
     document.getElementById('dp-apply').onclick=()=>{
-        customDateFrom=document.getElementById('dp-from').value;
-        customDateTo=document.getElementById('dp-to').value;
-        if(customDateFrom&&customDateTo){
-            membersPeriod='custom';
-            document.querySelectorAll('#m-periods button').forEach(x=>x.classList.remove('active'));
-            document.querySelector('#m-periods .custom-btn').classList.add('active');
+        const from=document.getElementById('dp-from').value;
+        const to=document.getElementById('dp-to').value;
+        const target=document.getElementById('date-picker').dataset.target;
+        
+        if(from&&to){
             document.getElementById('date-picker').classList.add('hide');
-            fetchMembers()
+            
+            if(target==='members'){
+                customDateFrom=from;
+                customDateTo=to;
+                membersPeriod='custom';
+                document.querySelectorAll('#m-periods button').forEach(x=>x.classList.remove('active'));
+                document.querySelector('#m-periods .custom-btn').classList.add('active');
+                fetchMembers()
+            }else{
+                // Overview custom period
+                period='custom';
+                document.querySelectorAll('#periods button').forEach(x=>x.classList.remove('active'));
+                document.querySelector('#periods .custom-btn').classList.add('active');
+                customDateFrom=from;
+                customDateTo=to;
+                fetchStats()
+            }
         }
     };
     

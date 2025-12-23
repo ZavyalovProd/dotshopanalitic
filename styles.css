@@ -108,6 +108,9 @@ nav{display:flex;flex-direction:column;gap:4px}
 .periods button:hover{color:#fff;background:rgba(255,150,80,.15)}
 .periods button.active{color:#000;font-weight:700}
 .periods button.active::before{opacity:1}
+.periods .custom-btn{padding:6px 8px}
+.card.tall{min-height:500px}
+.card.tall .m-list{max-height:420px}
 .dash.admin .periods button::before{background:linear-gradient(135deg,#ef4444,#dc2626)}
 .dash.admin .periods button:hover{background:rgba(239,68,68,.15)}
 
@@ -161,8 +164,9 @@ nav{display:flex;flex-direction:column;gap:4px}
 .bar{flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
 .bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
 
-.reviewer{position:relative;padding-right:16px}
-.reviewer::after{content:'⭐';position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:.6rem}
+.reviewer{position:relative;padding-right:18px}
+.reviewer::after{content:'⭐';position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:.65rem}
+td .reviewer::after,span.reviewer::after{content:'⭐';font-size:.6rem}
 
 .tbl-wrap{overflow-x:auto;max-height:350px;overflow-y:auto}
 table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:500px}
