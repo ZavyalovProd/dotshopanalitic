@@ -117,10 +117,16 @@
             <section class="sec" id="sec-admin">
                 <header class="head"><h1>🔴 Admin Panel</h1></header>
                 <div class="admin-g">
-                    <div class="admin-c"><h3>🔑 Create Token</h3><input type="text" id="tk-name" placeholder="Token name"><input type="number" id="tk-uses" placeholder="Max uses (-1 = ∞)" value="-1"><button id="tk-create">Create Token</button><div class="tk-done hide" id="tk-done"><p>✅ Copy now:</p><code id="tk-new"></code><button id="tk-copy">Copy</button></div></div>
-                    <div class="admin-c"><h3>📋 Tokens</h3><div class="admin-list" id="tk-list"></div></div>
-                    <div class="admin-c wide"><h3>🔐 Login Logs</h3><div class="admin-list" id="log-login"></div></div>
-                    <div class="admin-c wide"><h3>🤖 Bot Logs</h3><div class="admin-list" id="log-bot"></div></div>
+                    <div class="admin-c">
+                        <h3>🔑 Access Tokens</h3>
+                        <input type="text" id="tk-name" placeholder="Token name">
+                        <input type="number" id="tk-uses" placeholder="Max uses (-1 = ∞)" value="-1">
+                        <button id="tk-create">Create Token</button>
+                        <div class="tk-done hide" id="tk-done"><p>✅ Token created:</p><code id="tk-new"></code><button id="tk-copy">Copy</button></div>
+                        <div class="admin-list" id="tk-list"></div>
+                    </div>
+                    <div class="admin-c"><h3>🔐 Login Logs</h3><div class="admin-list" id="log-login"></div></div>
+                    <div class="admin-c wide"><h3>🤖 Bot Activity</h3><div class="admin-list" id="log-bot"></div></div>
                 </div>
             </section>
         </main>

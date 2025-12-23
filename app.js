@@ -284,15 +284,19 @@ async function delToken(id){
 
 async function loadLogs(){
     if(!isAdmin)return;
+    
+    // Load login logs
     try{
         const r1=await fetch(API+'/logs/login',{headers:{'Authorization':'Bearer '+token}});
         const d1=await r1.json();
-        document.getElementById('log-login').innerHTML=d1.logs?.length?d1.logs.map(l=>{const t=new Date(l.timestamp);return `<div class="log ${l.success?'success':'error'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.token_type} ${l.success?'✓':'✗'}</div></div>`}).join(''):'<div class="no-data">No logs</div>'
+        document.getElementById('log-login').innerHTML=d1.logs?.length?d1.logs.slice(0,20).map(l=>{const t=new Date(l.timestamp);return `<div class="log ${l.success?'success':'error'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.token_type} ${l.success?'✓':'✗'}</div></div>`}).join(''):'<div class="no-data">No logs</div>'
     }catch{}
+    
+    // Load bot logs
     try{
         const r2=await fetch(API+'/logs/bot',{headers:{'Authorization':'Bearer '+token}});
         const d2=await r2.json();
-        document.getElementById('log-bot').innerHTML=d2.logs?.length?d2.logs.map(l=>{const t=new Date(l.timestamp);return `<div class="log ${l.level||'info'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.message}</div></div>`}).join(''):'<div class="no-data">No logs</div>'
+        document.getElementById('log-bot').innerHTML=d2.logs?.length?d2.logs.slice(0,20).map(l=>{const t=new Date(l.timestamp);return `<div class="log ${l.level||'info'}"><div class="time">${t.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="msg">${l.message}</div></div>`}).join(''):'<div class="no-data">No logs</div>'
     }catch{}
 }
 
