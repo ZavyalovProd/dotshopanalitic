@@ -348,10 +348,17 @@ document.addEventListener('DOMContentLoaded',()=>{
             document.querySelectorAll('#periods button').forEach(x=>x.classList.remove('active'));
             b.classList.add('active');
             period=b.dataset.p;
-            // Animate stats
-            document.querySelectorAll('.stat-v').forEach(s=>{s.style.opacity='0.5'});
+            // Smooth fade out stats
+            document.querySelectorAll('.stat-v').forEach(s=>{
+                s.style.opacity='0.3';
+                s.style.transform='scale(0.95)';
+            });
             fetchStats().then(()=>{
-                document.querySelectorAll('.stat-v').forEach(s=>{s.style.opacity='1'})
+                // Smooth fade in stats
+                document.querySelectorAll('.stat-v').forEach(s=>{
+                    s.style.opacity='1';
+                    s.style.transform='scale(1)';
+                })
             })
         }
     });
