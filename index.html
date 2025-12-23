@@ -102,9 +102,27 @@
             </section>
 
             <section class="sec" id="sec-members">
-                <header class="head"><h1>Members</h1></header>
-                <div class="m-stats"><div class="stat"><div class="stat-i">👥</div><div><span class="stat-l">Total</span><span class="stat-v" id="m-total">-</span></div></div><div class="stat"><div class="stat-i">🆕</div><div><span class="stat-l">New (30d)</span><span class="stat-v" id="m-new">-</span></div></div><div class="stat"><div class="stat-i">🛒</div><div><span class="stat-l">Buyers</span><span class="stat-v" id="m-buyers">-</span></div></div></div>
-                <div class="card"><h3>Recent Members</h3><div class="m-list" id="m-list"><div class="loading">Loading...</div></div></div>
+                <header class="head">
+                    <h1>Members</h1>
+                    <div class="m-periods" id="m-periods">
+                        <button data-p="today">Today</button>
+                        <button data-p="week" class="active">Week</button>
+                        <button data-p="month">Month</button>
+                        <button data-p="year">Year</button>
+                        <button data-p="all">All</button>
+                        <button data-p="custom" class="custom-btn">📅</button>
+                    </div>
+                </header>
+                <div class="m-stats"><div class="stat"><div class="stat-i">👥</div><div><span class="stat-l">Total</span><span class="stat-v" id="m-total">-</span></div></div><div class="stat"><div class="stat-i">🆕</div><div><span class="stat-l">New</span><span class="stat-v" id="m-new">-</span></div></div><div class="stat"><div class="stat-i">🛒</div><div><span class="stat-l">Buyers</span><span class="stat-v" id="m-buyers">-</span></div></div></div>
+                <div class="card"><h3>Recent Members <span class="m-count" id="m-count">(0)</span></h3><div class="m-list" id="m-list"><div class="loading">Loading...</div></div></div>
+                <div class="date-picker hide" id="date-picker">
+                    <div class="dp-inner">
+                        <h4>Select Date Range</h4>
+                        <div class="dp-row"><label>From</label><input type="date" id="dp-from"></div>
+                        <div class="dp-row"><label>To</label><input type="date" id="dp-to"></div>
+                        <div class="dp-btns"><button id="dp-cancel">Cancel</button><button id="dp-apply">Apply</button></div>
+                    </div>
+                </div>
             </section>
 
             <section class="sec" id="sec-reviews">

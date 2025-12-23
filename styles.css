@@ -179,7 +179,13 @@ tr:hover td{background:rgba(255,150,80,.03)}
 .vbtn{padding:4px 8px;background:rgba(255,150,80,.15);border:none;border-radius:4px;color:#ffb070;font-size:.6rem;cursor:pointer;transition:all .2s}
 .vbtn:hover{background:rgba(255,150,80,.25)}
 
-.m-list{display:flex;flex-direction:column;gap:6px;max-height:350px;overflow-y:auto}
+.m-list{display:flex;flex-direction:column;gap:6px;max-height:450px;overflow-y:auto}
+.m-count{font-weight:400;color:rgba(255,255,255,.4);font-size:.75rem}
+.m-periods{display:flex;gap:4px;background:rgba(255,255,255,.03);padding:3px;border-radius:8px}
+.m-periods button{padding:6px 10px;border:none;background:transparent;color:rgba(255,255,255,.5);font-family:'Space Mono',monospace;font-size:.65rem;border-radius:5px;cursor:pointer;transition:all .3s}
+.m-periods button:hover{color:#fff;background:rgba(255,150,80,.15)}
+.m-periods button.active{background:linear-gradient(135deg,#ff9d5c,#ff7b3a);color:#000;font-weight:700}
+.m-periods .custom-btn{padding:6px 8px}
 .m-item{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;position:relative}
 .m-item.has-order{padding-right:35px}
 .m-item.has-order::after{content:'🛒';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.75rem}
@@ -204,6 +210,17 @@ tr:hover td{background:rgba(255,150,80,.03)}
 .discord{display:inline-block;padding:10px 18px;background:#5865F2;border-radius:6px;color:#fff;text-decoration:none;font-weight:600;font-size:.85rem;transition:all .2s}
 .discord:hover{background:#4752c4;transform:translateY(-2px)}
 .loading{text-align:center;color:rgba(255,255,255,.4);padding:25px;font-size:.85rem}
+
+.date-picker{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:1001}
+.dp-inner{background:#111;border:1px solid rgba(255,150,80,.2);border-radius:12px;padding:20px;width:280px}
+.dp-inner h4{margin-bottom:15px;color:#ffb070}
+.dp-row{margin-bottom:12px}
+.dp-row label{display:block;font-size:.7rem;color:rgba(255,255,255,.5);margin-bottom:4px}
+.dp-row input{width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,150,80,.2);border-radius:6px;color:#fff;font-family:'Space Mono',monospace}
+.dp-btns{display:flex;gap:8px}
+.dp-btns button{flex:1;padding:8px;border:none;border-radius:6px;cursor:pointer;font-weight:600}
+#dp-cancel{background:rgba(255,255,255,.1);color:#fff}
+#dp-apply{background:linear-gradient(135deg,#ff9d5c,#ff7b3a);color:#000}
 
 .admin-g{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .admin-c{background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:15px}

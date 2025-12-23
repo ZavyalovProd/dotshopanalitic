@@ -1,5 +1,5 @@
 const API='https://api.dotinfo.com.ru/api';
-let period='week',token=null,isAdmin=false,data=null,allOrders=[],reviewerIds=new Set(),filterPay='all';
+let period='week',membersPeriod='week',customDateFrom=null,customDateTo=null,token=null,isAdmin=false,data=null,allOrders=[],reviewerIds=new Set(),filterPay='all';
 
 function loader(){
     const el=document.getElementById('loader-status');
@@ -118,7 +118,11 @@ async function fetchReviews(){
 async function fetchMembers(){
     if(!token)return;
     try{
-        const r=await fetch(API+'/members',{headers:{'Authorization':'Bearer '+token}});
+        let url=API+'/members?period='+membersPeriod;
+        if(membersPeriod==='custom'&&customDateFrom&&customDateTo){
+            url+=`&from=${customDateFrom}&to=${customDateTo}`
+        }
+        const r=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
         const d=await r.json();
         renderMembers(d)
     }catch{}
@@ -200,10 +204,12 @@ function renderOrders(orders){
 
 function renderMembers(d){
     document.getElementById('m-total').textContent=d.total_members||0;
-    document.getElementById('m-new').textContent=d.recent_members?.length||0;
+    const recentCount=d.recent_members?.length||0;
+    document.getElementById('m-new').textContent=recentCount;
     document.getElementById('m-buyers').textContent=d.buyers_count||0;
+    document.getElementById('m-count').textContent=`(${recentCount})`;
     const list=document.getElementById('m-list');
-    if(!d.recent_members?.length){list.innerHTML='<div class="no-data">No recent members</div>';return}
+    if(!d.recent_members?.length){list.innerHTML='<div class="no-data">No members in this period</div>';return}
     list.innerHTML=d.recent_members.map(m=>{
         const date=new Date(m.joined_at);
         const dateStr=date.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
@@ -343,6 +349,34 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('filter-reset').onclick=()=>{filterPay='all';document.getElementById('filter-pay').value='all';render()};
     
     document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>switchTab(b));
+    
+    // Members period buttons
+    document.querySelectorAll('#m-periods button').forEach(b=>{
+        b.onclick=()=>{
+            if(b.dataset.p==='custom'){
+                document.getElementById('date-picker').classList.remove('hide');
+                return
+            }
+            document.querySelectorAll('#m-periods button').forEach(x=>x.classList.remove('active'));
+            b.classList.add('active');
+            membersPeriod=b.dataset.p;
+            fetchMembers()
+        }
+    });
+    
+    // Date picker
+    document.getElementById('dp-cancel').onclick=()=>document.getElementById('date-picker').classList.add('hide');
+    document.getElementById('dp-apply').onclick=()=>{
+        customDateFrom=document.getElementById('dp-from').value;
+        customDateTo=document.getElementById('dp-to').value;
+        if(customDateFrom&&customDateTo){
+            membersPeriod='custom';
+            document.querySelectorAll('#m-periods button').forEach(x=>x.classList.remove('active'));
+            document.querySelector('#m-periods .custom-btn').classList.add('active');
+            document.getElementById('date-picker').classList.add('hide');
+            fetchMembers()
+        }
+    };
     
     document.querySelectorAll('#nav .nav').forEach(n=>{
         n.onclick=e=>{
