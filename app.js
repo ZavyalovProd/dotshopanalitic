@@ -338,16 +338,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('tk-copy').onclick=copyToken;
     
     document.querySelectorAll('#periods button').forEach(b=>{
-        b.innerHTML=`<span>${b.textContent}</span>`;
+        const p = b.dataset.p;
+        if(p !== 'custom') b.innerHTML=`<span>${b.textContent}</span>`;
         b.onclick=()=>{
-            if(b.dataset.p==='custom'){
+            if(p==='custom'){
                 document.getElementById('date-picker').classList.remove('hide');
                 document.getElementById('date-picker').dataset.target='overview';
                 return
             }
             document.querySelectorAll('#periods button').forEach(x=>x.classList.remove('active'));
             b.classList.add('active');
-            period=b.dataset.p;
+            period=p;
             // Smooth fade out stats
             document.querySelectorAll('.stat-v').forEach(s=>{
                 s.style.opacity='0.3';
