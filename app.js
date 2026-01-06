@@ -158,6 +158,10 @@ function render(){
     document.getElementById('c-eur').textContent='€'+(data.revenue_eur||0).toFixed(2);
     document.getElementById('c-usd').textContent='$'+(data.revenue_usd||0).toFixed(2);
     document.getElementById('c-rub').textContent='₽'+Math.round(data.revenue_rub||0).toLocaleString();
+    // Tips
+    const tipsTotal=data.tips_total||0;
+    const tipsCount=data.tips_count||0;
+    document.getElementById('s-tips').textContent=tipsCount>0?`€${tipsTotal.toFixed(2)} (${tipsCount})`:'€0';
     renderPayments(data.payment_methods||{});
     renderProducts(data.top_products||[]);
     renderBuyers(data.top_buyers||[]);
@@ -312,6 +316,37 @@ async function loadLogs(){
     }catch{}
 }
 
+async function loadTips(){
+    if(!isAdmin)return;
+    try{
+        const r=await fetch(API+'/tips',{headers:{'Authorization':'Bearer '+token}});
+        const d=await r.json();
+        const c=document.getElementById('tips-list');
+        if(!d.tips?.length){c.innerHTML='<div class="no-data">No tips yet</div>';return}
+        c.innerHTML=d.tips.slice(0,10).map(t=>{
+            const date=new Date(t.timestamp);
+            const ds=date.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+            return `<div class="tk-item"><div class="info"><div class="name">${t.nickname}</div><div class="meta">${ds} • €${t.amount.toFixed(2)}</div></div></div>`
+        }).join('')
+    }catch{}
+}
+
+async function addTip(){
+    const nick=document.getElementById('tip-nick').value.trim();
+    const amount=parseFloat(document.getElementById('tip-amount').value)||0;
+    if(!nick||amount<=0){alert('Enter nickname and amount');return}
+    try{
+        const r=await fetch(API+'/tips/add',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({nickname:nick,amount})});
+        const d=await r.json();
+        if(d.success){
+            document.getElementById('tip-nick').value='';
+            document.getElementById('tip-amount').value='';
+            loadTips();
+            fetchStats()
+        }else{alert(d.error||'Error')}
+    }catch{alert('Error adding tip')}
+}
+
 function switchTab(btn){
     const tabs=btn.parentElement;
     const wrap=tabs.nextElementSibling;
@@ -336,6 +371,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('inp-code').onkeypress=e=>e.key==='Enter'&&verifyCode();
     document.getElementById('tk-create').onclick=createToken;
     document.getElementById('tk-copy').onclick=copyToken;
+    document.getElementById('tip-add').onclick=addTip;
     
     document.querySelectorAll('#periods button').forEach(b=>{
         const p = b.dataset.p;
@@ -424,7 +460,7 @@ document.addEventListener('DOMContentLoaded',()=>{
             const sec=document.getElementById('sec-'+s);
             sec.classList.add('active');
             setTimeout(()=>sec.classList.add('fade-in'),10);
-            if(s==='admin'&&isAdmin){loadTokens();loadLogs()}
+            if(s==='admin'&&isAdmin){loadTokens();loadLogs();loadTips()}
             if(s==='members')fetchMembers();
             document.getElementById('side').classList.remove('open');
             document.getElementById('overlay').classList.remove('show')
